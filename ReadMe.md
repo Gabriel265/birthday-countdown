@@ -2,7 +2,7 @@
 
 A beautiful, interactive countdown timer for birthdays and special occasions.
 
-![Birthday Countdown Screenshot](./screenshot.png)
+![Birthday Countdown Screenshot](./Screenshot.png)
 
 ## Features
 
