@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Countdown</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366F1; /* Indigo */
+            --secondary-color: #A855F7; /* Purple */
+            --accent-color: #EC4899; /* Pink */
+            --background-light: #f8fafc;
+            --text-light: #1e293b;
+            --background-dark: #111827;
+            --text-dark: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-light);
+            color: var(--text-light);
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        body.dark {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 450px;
+            width: 100%;
+            margin: 0 auto;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--accent-color) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        body.dark .container {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-position: center;
+            background-size: cover;
+            opacity: 0.3;
+            mix-blend-mode: overlay;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .profile-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: block;
+        }
+
+        .title-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .title {
+            font-size: 24px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            position: relative;
+            display: inline-block;
+        }
+
+        .edit-btn {
+            position: absolute;
+            right: -30px;
+            top: 5px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .days-counter {
+            font-size: 70px;
+            font-weight: 800;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .days-label {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .timer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .timer-box {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            flex: 1;
+            margin: 0 5px;
+            backdrop-filter: blur(5px);
+        }
+
+        .timer-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .timer-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Edit Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: var(--text-light);
+        }
+
+        body.dark .modal-content {
+            background-color: #1e293b;
+            color: var(--text-dark);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+
+        body.dark .form-group input {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: white;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        body.dark .btn-secondary {
+            background-color: #4b5563;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* Image Upload */
+        .form-group-image {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 10px auto;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Celebration Effects */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            pointer-events: none;
+            display: none;
+        }
+
+        .balloon {
+            position: absolute;
+            width: 30px;
+            height: 40px;
+            background-color: #ff5252;
+            border-radius: 50%;
+            bottom: -50px;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .balloon:before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            font-weight: 800;
+            color: var(--accent-color);
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            z-index: 60;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            animation: explode 1s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(50);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 0;
+                height: 100vh;
+                max-width: none;
+                margin: -20px;
+                width: calc(100% + 40px);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            
+            .days-counter {
+                font-size: 60px;
+            }
+            
+            .timer-value {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <div class="image-overlay" id="backgroundImage"></div>
+        <div class="content">
+            <img class="profile-image" id="profileImage" src="/api/placeholder/200/200" alt="Birthday Person">
+            <div class="title-container">
+                <h1 class="title">
+                    <span id="nameDisplay">Janet's Birthday</span>
+                    <button class="edit-btn" id="editBtn">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </h1>
+            </div>
+            
+            <div class="days-counter" id="daysLeft">--</div>
+            <div class="days-label">days</div>
+            
+            <div class="timer">
+                <div class="timer-box">
+                    <div class="timer-value" id="hours">--</div>
+                    <div class="timer-label">hours</div>
+                </div>
+                <div class="timer-box">
+                    <div class="timer-value" id="minutes">--</div>
+                    <div class="timer-label">minutes</div>
+                </div>
+                <div class="timer-box">
+                    <div class="timer-value" id="seconds">--</div>
+                    <div class="timer-label">seconds</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="form-group-image">
+                <label for="imageInput">Profile Image</label>
+                <div class="image-preview">
+                    <img id="imagePreview" src="/api/placeholder/200/200" alt="Preview">
+                </div>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                <button class="btn btn-secondary" id="selectImageBtn" style="margin-top: 10px;">Select Image</button>
+            </div>
+            <div class="form-group">
+                <label for="nameInput">Name</label>
+                <input type="text" id="nameInput" placeholder="Enter name">
+            </div>
+            <div class="form-group">
+                <label for="dateInput">Birthday Date</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration">
+        <div class="message" id="celebrationMessage">Happy Birthday!</div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const nameDisplay = document.getElementById('nameDisplay');
+        const daysLeft = document.getElementById('daysLeft');
+        const hours = document.getElementById('hours');
+        const minutes = document.getElementById('minutes');
+        const seconds = document.getElementById('seconds');
+        const editBtn = document.getElementById('editBtn');
+        const editModal = document.getElementById('editModal');
+        const nameInput = document.getElementById('nameInput');
+        const dateInput = document.getElementById('dateInput');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const backgroundImage = document.getElementById('backgroundImage');
+        const celebration = document.getElementById('celebration');
+        const celebrationMessage = document.getElementById('celebrationMessage');
+        const profileImage = document.getElementById('profileImage');
+        const imageInput = document.getElementById('imageInput');
+        const selectImageBtn = document.getElementById('selectImageBtn');
+        const imagePreview = document.getElementById('imagePreview');
+
+        // Default data
+        const defaultName = "Janet";
+        const defaultDate = "2025-05-05"; // Format YYYY-MM-DD
+        const defaultImage = "/api/placeholder/200/200";
+        
+        // Images for background
+        const images = [
+            'https://source.unsplash.com/random/800x1200/?celebration',
+            'https://source.unsplash.com/random/800x1200/?birthday',
+            'https://source.unsplash.com/random/800x1200/?party'
+        ];
+
+        // Celebration colors
+        const celebrationColors = [
+            '#6366F1', // Indigo
+            '#A855F7', // Purple
+            '#EC4899', // Pink
+            '#FBBF24', // Amber
+            '#34D399', // Emerald
+            '#3B82F6'  // Blue
+        ];
+
+        // Initialize data from localStorage or use defaults
+        let birthdayName = localStorage.getItem('birthdayName') || defaultName;
+        let birthdayDate = localStorage.getItem('birthdayDate') || defaultDate;
+        let profileImageSrc = localStorage.getItem('birthdayImage') || defaultImage;
+
+        // Initialize
+        function init() {
+            // Set theme from localStorage or default to light
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                body.classList.add('dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+
+            // Set random background image
+            const randomImage = images[Math.floor(Math.random() * images.length)];
+            backgroundImage.style.backgroundImage = `url(${randomImage})`;
+
+            // Set profile image
+            profileImage.src = profileImageSrc;
+            imagePreview.src = profileImageSrc;
+            
+            // Update display with saved data
+            updateNameDisplay();
+            
+            // Set form values
+            nameInput.value = birthdayName;
+            dateInput.value = birthdayDate;
+            
+            // Start countdown
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            
+            // Check if it's birthday
+            checkIfBirthday();
+        }
+
+        // Update countdown timer
+        function updateCountdown() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            
+            // Parse birthday date (format is YYYY-MM-DD)
+            const [year, month, day] = birthdayDate.split('-');
+            
+            // Create date object for this year's birthday
+            let birthdayThisYear = new Date(currentYear, parseInt(month) - 1, parseInt(day));
+            
+            // If birthday has passed this year, use next year's date
+            if (now > birthdayThisYear) {
+                birthdayThisYear = new Date(currentYear + 1, parseInt(month) - 1, parseInt(day));
+            }
+            
+            // Calculate difference
+            const diff = birthdayThisYear - now;
+            
+            // Calculate days, hours, minutes, seconds
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            // Update DOM
+            daysLeft.textContent = d;
+            hours.textContent = h.toString().padStart(2, '0');
+            minutes.textContent = m.toString().padStart(2, '0');
+            seconds.textContent = s.toString().padStart(2, '0');
+        }
+
+        // Check if today is the birthday
+        function checkIfBirthday() {
+            const now = new Date();
+            const [year, month, day] = birthdayDate.split('-');
+            
+            // Check if today's date matches the birthday (ignoring year)
+            if (now.getDate() === parseInt(day) && now.getMonth() === parseInt(month) - 1) {
+                celebrateBirthday();
+            }
+        }
+
+        // Create birthday celebration
+        function celebrateBirthday() {
+            celebration.style.display = 'block';
+            
+            // Show celebration message with animation
+            celebrationMessage.style.animation = 'fadeIn 5s ease-in-out';
+            celebrationMessage.style.opacity = '1';
+            
+            // Create balloons
+            for (let i = 0; i < 30; i++) {
+                createBalloon();
+            }
+            
+            // Create fireworks
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    createFirework();
+                }, i * 300);
+            }
+            
+            // Hide celebration after 6 seconds
+            setTimeout(() => {
+                celebration.style.display = 'none';
+            }, 15000);
+        }
+
+        // Create a balloon element
+        function createBalloon() {
+            const balloon = document.createElement('div');
+            balloon.classList.add('balloon');
+            
+            // Random position and color
+            const left = Math.random() * 100;
+            const color = celebrationColors[Math.floor(Math.random() * celebrationColors.length)];
+            const delay = Math.random() * 5;
+            const size = 20 + Math.random() * 30;
+            
+            balloon.style.left = `${left}%`;
+            balloon.style.backgroundColor = color;
+            balloon.style.width = `${size}px`;
+            balloon.style.height = `${size * 1.2}px`;
+            balloon.style.animationDelay = `${delay}s`;
+            
+            celebration.appendChild(balloon);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                balloon.remove();
+            }, 10000);
+        }
+
+        // Create a firework element
+        function createFirework() {
+            const firework = document.createElement('div');
+            firework.classList.add('firework');
+            
+            // Random position and color
+            const left = 20 + Math.random() * 60;
+            const top = 20 + Math.random() * 60;
+            const color = celebrationColors[Math.floor(Math.random() * celebrationColors.length)];
+            
+            firework.style.left = `${left}%`;
+            firework.style.top = `${top}%`;
+            firework.style.backgroundColor = color;
+            firework.style.boxShadow = `0 0 8px 4px ${color}`;
+            
+            celebration.appendChild(firework);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                firework.remove();
+            }, 1000);
+        }
+
+        // Update name display with proper format
+        function updateNameDisplay() {
+            nameDisplay.textContent = `${birthdayName}'s Birthday`;
+        }
+
+        // Handle image selection
+        selectImageBtn.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Event Listeners
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark');
+            
+            // Update localStorage and button icon
+            if (body.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+
+        editBtn.addEventListener('click', () => {
+            editModal.style.display = 'flex';
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            editModal.style.display = 'none';
+        });
+
+        saveBtn.addEventListener('click', () => {
+            birthdayName = nameInput.value || defaultName;
+            birthdayDate = dateInput.value || defaultDate;
+            
+            // Save image if changed
+            if (imagePreview.src != profileImageSrc) {
+                profileImageSrc = imagePreview.src;
+                profileImage.src = profileImageSrc;
+                localStorage.setItem('birthdayImage', profileImageSrc);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('birthdayName', birthdayName);
+            localStorage.setItem('birthdayDate', birthdayDate);
+            
+            // Update display
+            updateNameDisplay();
+            
+            // Close modal
+            editModal.style.display = 'none';
+            
+            // Check if it's birthday after date change
+            checkIfBirthday();
+        });
+
+        // Close modal if clicked outside
+        window.addEventListener('click', (e) => {
+            if (e.target === editModal) {
+                editModal.style.display = 'none';
+            }
+        });
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
